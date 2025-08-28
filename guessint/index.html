@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>猜数字游戏</title>
+  <style>
+    body {
+      background: #f7f7fa;
+      font-family: 'Segoe UI', 'PingFang SC', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 400px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 32px 24px 24px 24px;
+    }
+    h1 {
+      text-align: center;
+      color: #4a90e2;
+      margin-bottom: 24px;
+      font-weight: 600;
+    }
+    label {
+      font-size: 15px;
+      color: #333;
+      margin-right: 8px;
+    }
+    input[type="text"] {
+      padding: 8px 12px;
+      border: 1px solid #d0d0d5;
+      border-radius: 6px;
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 8px;
+      width: 120px;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus {
+      border-color: #4a90e2;
+    }
+    button {
+      padding: 8px 18px;
+      background: #4a90e2;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      cursor: pointer;
+      margin-left: 8px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    #chat {
+      margin-top: 24px;
+      padding-left: 0;
+      list-style: none;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e0e0e5;
+      border-radius: 6px;
+      background: #fafbfc;
+    }
+    #chat li {
+      padding: 8px 12px;
+      border-bottom: 1px solid #ececec;
+      color: #444;
+      font-size: 15px;
+    }
+    #chat li:last-child {
+      border-bottom: none;
+    }
+    .input-row {
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .guess-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>猜数字游戏</h1>
+    <div class="input-row">
+      <label for="room">房间名：</label>
+      <input id="room" value="room1" type="text">
+      <button onclick="connect()">进入房间</button>
+    </div>
+    <div class="guess-row">
+      <input id="guess" type="text" placeholder="输入数字">
+      <button onclick="sendGuess()">猜</button>
+    </div>
+    <ul id="chat"></ul>
+  </div>
+  <script>
+    var ws;
+
+    function connect() {
+      var room = document.getElementById("room").value;
+      ws = new WebSocket("ws://localhost:8080/ws/" + room);
+
+      ws.onmessage = function(event) {
+        var li = document.createElement("li");
+        li.innerText = event.data;
+        document.getElementById("chat").appendChild(li);
+        document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+      };
+
+      ws.onopen = function() {
+        var li = document.createElement("li");
+        li.innerText = "已连接到房间：" + room;
+        li.style.color = "#4a90e2";
+        document.getElementById("chat").appendChild(li);
+      };
+
+      ws.onclose = function() {
+        var li = document.createElement("li");
+        li.innerText = "连接已断开";
+        li.style.color = "#e94f4f";
+        document.getElementById("chat").appendChild(li);
+      };
+
+      ws.onerror = function() {
+        var li = document.createElement("li");
+        li.innerText = "连接出错";
+        li.style.color = "#e94f4f";
+        document.getElementById("chat").appendChild(li);
+      };
+    }
+
+    function sendGuess() {
+      var input = document.getElementById("guess");
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(input.value);
+        input.value = "";
+      }
+    }
+  </script>
+</body>
+</html>
