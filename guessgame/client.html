@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>石头剪刀布</title>
+</head>
+<body>
+  <h1>石头剪刀布对战房间</h1>
+  <label>房间名：</label>
+  <input id="room" value="room1">
+  <button onclick="connect()">进入房间</button>
+  <br><br>
+  <button onclick="sendMove('rock')">✊ 石头</button>
+  <button onclick="sendMove('paper')">✋ 布</button>
+  <button onclick="sendMove('scissors')">✌ 剪刀</button>
+  <ul id="chat"></ul>
+
+  <script>
+    var ws;
+
+    function connect() {
+      var room = document.getElementById("room").value;
+      ws = new WebSocket("ws://localhost:8080/ws/" + room);
+
+      ws.onmessage = function(event) {
+        var li = document.createElement("li");
+        li.innerText = event.data;
+        document.getElementById("chat").appendChild(li);
+      };
+    }
+
+    function sendMove(move) {
+      if (ws) {
+        ws.send(move);
+      }
+    }
+  </script>
+</body>
+</html>
