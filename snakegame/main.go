@@ -143,30 +143,43 @@ func (r *Room) update() {
 		var newBody []Point
 
 		// 撞自己判定
+		selfHit := false
 		for _, b := range snake.Body {
 			if next == b {
-				if snake.Alive {
-					snake.Alive = false
-					r.saveScore(snake.ID, snake.Score)
-				}
-				goto CONTINUE_PLAYERS
+				selfHit = true
+				break
 			}
+		}
+		if selfHit {
+			if snake.Alive {
+				snake.Alive = false
+				r.saveScore(snake.ID, snake.Score)
+			}
+			continue
 		}
 
 		// 撞其他玩家判定
+		otherHit := false
 		for _, other := range r.players {
 			if other.ID == snake.ID {
 				continue
 			}
 			for _, b := range other.Body {
 				if next == b {
-					if snake.Alive {
-						snake.Alive = false
-						r.saveScore(snake.ID, snake.Score)
-					}
-					goto CONTINUE_PLAYERS
+					otherHit = true
+					break
 				}
 			}
+			if otherHit {
+				break
+			}
+		}
+		if otherHit {
+			if snake.Alive {
+				snake.Alive = false
+				r.saveScore(snake.ID, snake.Score)
+			}
+			continue
 		}
 
 		// 正常前进
@@ -180,8 +193,6 @@ func (r *Room) update() {
 			snake.Body = append(snake.Body, tail)
 			r.food = r.randomEmptyCell()
 		}
-
-	CONTINUE_PLAYERS:
 	}
 
 	// 广播当前状态给所有玩家
@@ -407,6 +418,10 @@ func main() {
 	r.GET("/api/leaderboard", server.leaderboard) // 排行榜接口
 	r.GET("/health", server.health)               // 健康检查
 	r.StaticFile("/", "./client.html")            // 前端页面
+
+	r.NoRoute(func(c *gin.Context) {
+		c.File("./client.html")
+	})
 
 	addr := ":8080"
 	log.Printf("Snake game server running at %s", addr)

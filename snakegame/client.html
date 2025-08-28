@@ -180,6 +180,17 @@ function draw() {
   const gridW = state.w, gridH = state.h;
   const size = Math.min(cvs.width/gridW, cvs.height/gridH);
 
+  // 检查是否还有存活的蛇
+  let aliveCount = 0;
+  for (const id in state.players) {
+    if (state.players[id].alive) aliveCount++;
+  }
+  if (aliveCount === 0) {
+    // 所有蛇都死了，清空画板并返回
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    return;
+  }
+
   // food
   ctx.fillStyle = "red";
   ctx.shadowColor = "#e57373";
@@ -190,7 +201,8 @@ function draw() {
   // snakes
   for (const id in state.players) {
     const s = state.players[id];
-    ctx.fillStyle = s.alive ? (id===me?"#2e7d32":"#1976d2") : "#888";
+    if (!s.alive) continue; // 死亡蛇不绘制
+    ctx.fillStyle = id===me ? "#2e7d32" : "#1976d2";
     ctx.strokeStyle = "#fff";
     ctx.lineWidth = 2;
     for (const p of s.body) {
@@ -199,7 +211,6 @@ function draw() {
       ctx.fill();
       ctx.stroke();
     }
-    // 小标签
     ctx.fillStyle = "#222";
     ctx.font = "12px monospace";
     ctx.fillText(`${id}(${s.score})`, s.body[0].x*size+2, s.body[0].y*size+14);
